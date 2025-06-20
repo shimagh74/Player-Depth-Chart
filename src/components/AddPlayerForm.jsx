@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState, useMemo, useEffect } from 'react';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { addPlayer } from '../store/depthChartSlice';
 import toast from 'react-hot-toast';
 import { validatePlayerForm } from '../utils/validators';
@@ -7,6 +7,7 @@ import SelectField from './SelectField';
 
 const AddPlayerForm = () => {
   const dispatch = useDispatch();
+  const store = useStore();
   const sport = useSelector(state => state.depthChart.sport);
   const chartData = useSelector(state => state.depthChart.data);
   const positions = useMemo(() => Object.keys(chartData[sport]), [chartData, sport]);
@@ -18,6 +19,12 @@ const AddPlayerForm = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Reset form when sport changes
+  useEffect(() => {
+    setFormData({ player: '', position: '', spot: '' });
+    setErrors({});
+  }, [sport]);
 
   const handleChange = (field) => (e) => {
     setFormData(prev => ({
@@ -42,19 +49,23 @@ const AddPlayerForm = () => {
       return;
     }
 
-    try {
-      dispatch(addPlayer({
-        player: formData.player.trim(),
-        position: formData.position,
-        spot: formData.spot || 'end'
-      }));
+    dispatch(addPlayer({
+      player: formData.player.trim(),
+      position: formData.position,
+      spot: formData.spot || 'end'
+    }));
 
-      toast.success("Player added successfully!");
-      setFormData({ player: '', position: '', spot: '' });
-      setErrors({});
-    } catch (error) {
-      toast.error("Failed to add player.");
-    }
+    // Wait for Redux state to update, then check for error
+    setTimeout(() => {
+      const error = store.getState().depthChart.error;
+      if (error) {
+        toast.error(error);
+      } else {
+        toast.success("Player added successfully!");
+        setFormData({ player: '', position: '', spot: '' });
+        setErrors({});
+      }
+    }, 0);
   };
 
   const spotOptions = ['Starter', 'Second', 'Third', 'Fourth'];

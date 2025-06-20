@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DEPTH_LEVELS } from "../store/depthChartSlice"; 
+import { DEPTH_LEVELS } from '../store/constants';
 
 const PlayerCell = ({ player, onRemove }) => {
   return player ? (
